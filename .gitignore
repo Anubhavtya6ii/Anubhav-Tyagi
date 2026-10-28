@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
-data/nifty_opt_days/
+data/nse_opt_days/
+data/deribit_days/

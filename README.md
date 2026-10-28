@@ -20,6 +20,19 @@ End-of-day backtest of iron condors / iron flies on Nifty weekly options from NS
 Output: `Nifty_Options_Backtest.xlsx` (summary, slippage test, yearly, monthly, VIX regime, Rs 25,000 equity, every trade).
 
 ```bash
-python fetch_nifty_options.py   # ~1,900 NSE bhavcopies -> data/nifty_options.csv.gz (takes a while)
+python fetch_nse_options.py     # ~2,600 NSE bhavcopies -> data/nse_options.csv.gz (Nifty + Bank Nifty, takes a while)
 python options_backtest.py      # writes Nifty_Options_Backtest.xlsx
+```
+
+## Options strategy lab (Nifty, Bank Nifty, Bitcoin, Ethereum)
+
+One engine for ~670 defined-risk option strategies (condors, flies, straddles, strangles, directional calls/puts,
+debit and credit spreads, with trend / momentum / reversal signals and implied-vs-realized / vol-level filters),
+measured in R (profit / money at risk), validated out-of-sample and against random weeks (luck check).
+Output: `Options_Strategy_Lab.xlsx`.
+
+```bash
+python fetch_nse_options.py      # NSE bhavcopies
+python fetch_deribit_options.py  # Deribit trade history snapshots + 08:00 settlement prices
+python options_lab.py            # writes Options_Strategy_Lab.xlsx (~10 min, includes 20 luck-check runs)
 ```

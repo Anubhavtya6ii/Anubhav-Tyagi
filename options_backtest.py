@@ -1,6 +1,6 @@
 """End-of-day backtest of hedged Nifty weekly option-selling strategies (iron condor / iron fly).
 
-Run `python fetch_nifty_options.py` first, then `python options_backtest.py` -> Nifty_Options_Backtest.xlsx
+Run `python fetch_nse_options.py` first, then `python options_backtest.py` -> Nifty_Options_Backtest.xlsx
 """
 import numpy as np
 import pandas as pd
@@ -43,8 +43,8 @@ def stt_rate(day):
 # ---------------------------------------------------------------- data
 class Market:
     def __init__(self):
-        d = pd.read_csv("data/nifty_options.csv.gz", parse_dates=["date", "expiry"])
-        d = d[d.close > 0]
+        d = pd.read_csv("data/nse_options.csv.gz", parse_dates=["date", "expiry"])
+        d = d[(d.symbol == "NIFTY") & (d.date >= pd.Timestamp("2019-02-01")) & (d.close > 0)]
         self.px = {(r.date, r.expiry, r.strike, r.type): r.close for r in d.itertuples()}
         self.chains = {k: g for k, g in d.groupby(["date", "expiry"])}
         self.spot = d.groupby("date").spot.first()
