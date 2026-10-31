@@ -3,3 +3,7 @@ __pycache__/
 data/nse_opt_days/
 data/deribit_days/
 data/nifty_chain_days/
+dhan/raw/scrip_master_detailed.csv
+dhan/raw/history/
+dhan/data/
+__pycache__/
