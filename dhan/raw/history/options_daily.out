@@ -1,0 +1,10 @@
+options daily 200/3991
+options daily 50/3991 throttled=1
+options daily 100/3991 throttled=1
+options daily 150/3991 throttled=1
+options daily 200/3991 throttled=1
+options daily 50/3991 throttled=0 gap=3.0s
+options daily 100/3991 throttled=0 gap=3.0s
+options daily 150/3991 throttled=0 gap=3.0s
+options daily 200/3991 throttled=0 gap=3.0s
+options daily 250/3991 throttled=3 gap=10.1s
