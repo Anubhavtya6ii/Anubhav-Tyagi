@@ -27,3 +27,15 @@ options_1min 650/1014 throttled=0 gap=1.6s
 options_1min 675/1014 throttled=0 gap=1.6s
 options_1min 700/1014 throttled=0 gap=1.4s
 options_1min 725/1014 throttled=0 gap=1.4s
+options_1min 750/1014 throttled=0 gap=1.4s
+options_1min 775/1014 throttled=0 gap=1.3s
+options_1min 800/1014 throttled=0 gap=1.3s
+options_1min 825/1014 throttled=0 gap=1.2s
+options_1min 850/1014 throttled=0 gap=1.2s
+options_1min 875/1014 throttled=0 gap=1.2s
+options_1min 900/1014 throttled=0 gap=1.0s
+options_1min 925/1014 throttled=0 gap=1.0s
+options_1min 950/1014 throttled=0 gap=1.0s
+options_1min 975/1014 throttled=0 gap=1.0s
+options_1min 1000/1014 throttled=0 gap=1.0s
+options_1min 1014/1014 throttled=0 gap=1.0s
