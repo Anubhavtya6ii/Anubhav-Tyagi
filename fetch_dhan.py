@@ -50,7 +50,8 @@ OPT_COLS = ["datetime", "expiry_flag", "expiry_code", "option_type", "offset", "
             "open", "high", "low", "close", "volume", "oi", "iv"]
 
 WORKERS = 4
-MIN_GAP = 0.22  # seconds between any two requests overall (~4.5/s; the Data API limit is 5/s)
+MIN_GAP = 0.3  # seconds between any two requests overall (~3.3/s). The documented limit is 5/s, but a sustained 4.5/s
+               # got HTTP 429 / DH-904 after ~35 minutes; throttled windows are simply fetched again on the next run.
 
 
 class RateLimiter:
@@ -237,6 +238,13 @@ def fetch_options():
         sys.exit("No option data downloaded.")
     d = pd.concat(pd.read_csv(f"{CACHE}/{f}", parse_dates=["datetime"]) for f in files)
     d = d.drop_duplicates(["datetime", "option_type", "offset"]).sort_values(["datetime", "option_type", "offset"])
+    # A strike more than one step from where spot and offset put it is a Dhan glitch (seen once: 2025-10-16 15:25, ATM call at
+    # 26300 with Nifty at 25566). One step of slack is normal: CE and PE are sampled at slightly different instants, so near a
+    # strike midpoint the two sides can sit on neighbouring strikes.
+    glitch = (d.strike - (50 * (d.spot / 50).round() + 50 * d.offset)).abs() > 50
+    if glitch.any():
+        print(f"dropping {int(glitch.sum())} rows whose strike is inconsistent with spot: {sorted(set(d[glitch].datetime.astype(str)))}")
+        d = d[~glitch]
     for year, g in d.groupby(d.datetime.dt.year):
         g.to_csv(f"{OUT_DIR}/{year}.csv.gz", index=False)
         print(year, len(g), "rows")

@@ -56,5 +56,8 @@ Things learned from the live API that the script is built around:
 - `/charts/intraday` allows 90 days per call and needs `fromDate` before 09:15, otherwise the first candle is lost.
 - Holidays and dates before the data starts return empty arrays, not errors.
 - The `strike` string must be exactly `ATM+3` / `ATM-3`: a trailing space or lower case silently returns ATM.
+- Long option downloads get HTTP 429 (`DH-904`) even below the documented 5 requests/s. Such windows are not cached; run the script again and it fetches only those.
+- In the options file use the `strike` column, not `offset`, to identify a contract: CE and PE are sampled at slightly different instants, so when spot sits on a strike midpoint (0.06% of rows) the same `offset` can be neighbouring strikes on the two sides.
+  A few bars have fewer than 22 series (no trade in that bar), and bars at 15:30 (and at 15:35 on 62 days of 2026) and Diwali Muhurat evening sessions are real prints. Five special-session days (Budget Saturdays/Sunday, 2023-11-12, 2024-01-20, 2024-03-02) have 5-min index data but no option data.
 - The raw 5-minute feed contains junk that `fetch_dhan.py` removes: weekend mock sessions, flat zero-volume bars stamped 05:37-22:00 in Aug-Sep 2021, and bars after 15:30.
   It prints a QA report with what is still wrong (Dhan-side gaps such as 2022-03-03, which has only 13 bars).
