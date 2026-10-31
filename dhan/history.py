@@ -8,8 +8,6 @@ import gzip
 import json
 import os
 import sys
-from concurrent.futures import ThreadPoolExecutor
-
 import pandas as pd
 
 from client import Dhan
@@ -20,7 +18,7 @@ CHUNK_DAYS = 90  # Dhan limit per intraday call
 TODAY = pd.Timestamp.today().normalize()
 LOG = "raw/history/download_log.csv"
 
-d = Dhan(per_second=4.0)
+d = Dhan(per_second=1.0)  # Dhan throttles the account well below its published limits after bursts
 
 
 def chunks(start):
@@ -64,13 +62,19 @@ def fetch(kind, sid, seg, ins, interval, start=None):
                     "oi": seg != "IDX_I", "fromDate": fr, "toDate": to}
             st, j = d.post("/charts/intraday", body)
             responses.append({"request": body, "status": st, "response": j})
+    failed = [r for r in responses if r["status"] in (0, 429) or r["status"] >= 500]
+    if failed:  # don't cache a partial download; a re-run will try again
+        return {"kind": kind, "security_id": sid, "interval": interval, "calls": len(responses), "errors": len(failed),
+                "rows": None, "first": None, "last": None, "note": f"NOT SAVED: {failed[0]['status']} {str(failed[0]['response'])[:80]}"}
     with gzip.open(raw, "wt") as fh:
         json.dump(responses, fh)
     f = to_frame(responses)
     f.to_csv(out, index=False)
-    errors = sum(1 for r in responses if r["status"] != 200)
+    no_data = sum(1 for r in responses if r["status"] == 400 and "DH-907" in str(r["response"]))
+    errors = sum(1 for r in responses if r["status"] != 200) - no_data
     return {"kind": kind, "security_id": sid, "interval": interval, "calls": len(responses), "errors": errors,
-            "rows": len(f), "first": f.time_ist.min() if len(f) else None, "last": f.time_ist.max() if len(f) else None}
+            "rows": len(f), "first": f.time_ist.min() if len(f) else None, "last": f.time_ist.max() if len(f) else None,
+            "note": "no data (never traded)" if not len(f) and no_data else ""}
 
 
 def log(rows):
@@ -100,18 +104,19 @@ def main(stage):
         log([fetch("futures", s, "NSE_FNO", "FUTIDX", "D") for s in fut])
         log([fetch("futures", s, "NSE_FNO", "FUTIDX", iv, listing_start("futures", s)) for s in fut for iv in [1, 5, 15, 25, 60]])
     elif stage == "options_daily":
-        with ThreadPoolExecutor(4) as ex:
-            for i in range(0, len(opt), 200):
-                log(list(ex.map(lambda s: fetch("options", s, "NSE_FNO", "OPTIDX", "D"), opt[i:i + 200])))
-                print(f"options daily {min(i + 200, len(opt))}/{len(opt)}", flush=True)
-    elif stage == "options_1min":
-        def one(s):
-            st = listing_start("options", s)
-            return fetch("options", s, "NSE_FNO", "OPTIDX", 1, st) if st is not None else None
-        with ThreadPoolExecutor(4) as ex:
-            for i in range(0, len(opt), 100):
-                log(list(ex.map(one, opt[i:i + 100])))
-                print(f"options 1-min {min(i + 100, len(opt))}/{len(opt)}", flush=True)
+        for i in range(0, len(opt), 50):
+            log([fetch("options", s, "NSE_FNO", "OPTIDX", "D") for s in opt[i:i + 50]])
+            print(f"options daily {min(i + 50, len(opt))}/{len(opt)} throttled={d.throttled}", flush=True)
+    elif stage in ("options_1min", "options_1min_rest"):
+        # priority: the next 7 expiries and strikes within 10% of spot; the rest afterwards
+        o = inst[inst.INSTRUMENT == "OPTIDX"].copy()
+        spot = pd.read_csv("data/index/13_D.csv.gz").close.iloc[-1]
+        core = (pd.to_datetime(o.expiry) <= pd.Timestamp("2027-01-25")) & o.STRIKE_PRICE.between(spot * 0.9, spot * 1.1)
+        o = o[core if stage == "options_1min" else ~core].sort_values(["expiry", "STRIKE_PRICE"])
+        todo = [s for s in o.SECURITY_ID if listing_start("options", s) is not None]
+        for i in range(0, len(todo), 25):
+            log([fetch("options", s, "NSE_FNO", "OPTIDX", 1, listing_start("options", s)) for s in todo[i:i + 25]])
+            print(f"{stage} {min(i + 25, len(todo))}/{len(todo)} throttled={d.throttled}", flush=True)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@ class Dhan:
         self.lock = threading.Lock()
         self.last = 0.0
         self.s = requests.Session()
+        self.throttled = 0
 
     def _wait(self, gap):
         with self.lock:
@@ -24,23 +25,32 @@ class Dhan:
             self.last = t
         time.sleep(max(0.0, t - now))
 
-    def post(self, path, body, gap=None, tries=5):
-        """Returns (status, json-or-text). Retries on 429 / 5xx / network errors."""
+    def post(self, path, body, gap=None, tries=10):
+        """Returns (status, json-or-text). Retries on 429 / 5xx / network errors; 429 backs off 20-60 s,
+        because Dhan keeps throttling an account for a while after its rate limit is hit."""
+        last = (0, "no response")
         for attempt in range(tries):
             self._wait(gap or self.gap)
             try:
                 r = self.s.post(f"{BASE}{path}", headers=self.h, json=body, timeout=60)
-            except requests.RequestException:
-                time.sleep(2 ** attempt)
+            except requests.RequestException as e:
+                last = (0, repr(e))
+                time.sleep(2 ** min(attempt, 5))
                 continue
-            if r.status_code == 429 or r.status_code >= 500:
-                time.sleep(2 ** attempt)
+            if r.status_code == 429:
+                self.throttled += 1
+                last = (429, r.text[:200])
+                time.sleep(min(20 * (attempt + 1), 60))
+                continue
+            if r.status_code >= 500:
+                last = (r.status_code, r.text[:200])
+                time.sleep(2 ** min(attempt, 5))
                 continue
             try:
                 return r.status_code, r.json()
             except ValueError:
                 return r.status_code, r.text
-        return 0, "failed after retries"
+        return last
 
     def get(self, path):
         self._wait(self.gap)
