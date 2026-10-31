@@ -18,7 +18,8 @@ CHUNK_DAYS = 90  # Dhan limit per intraday call
 TODAY = pd.Timestamp.today().normalize()
 LOG = "raw/history/download_log.csv"
 
-d = Dhan(per_second=1.0)  # Dhan throttles the account well below its published limits after bursts
+d = Dhan(per_second=1.0)  # charts endpoints get throttled well below the published 5/s after bursts
+d.gap = 3.0  # start gently; the client adapts between 1 s and 15 s per call
 
 
 def chunks(start):
@@ -106,7 +107,7 @@ def main(stage):
     elif stage == "options_daily":
         for i in range(0, len(opt), 50):
             log([fetch("options", s, "NSE_FNO", "OPTIDX", "D") for s in opt[i:i + 50]])
-            print(f"options daily {min(i + 50, len(opt))}/{len(opt)} throttled={d.throttled}", flush=True)
+            print(f"options daily {min(i + 50, len(opt))}/{len(opt)} throttled={d.throttled} gap={d.gap:.1f}s", flush=True)
     elif stage in ("options_1min", "options_1min_rest"):
         # priority: the next 7 expiries and strikes within 10% of spot; the rest afterwards
         o = inst[inst.INSTRUMENT == "OPTIDX"].copy()
@@ -116,7 +117,7 @@ def main(stage):
         todo = [s for s in o.SECURITY_ID if listing_start("options", s) is not None]
         for i in range(0, len(todo), 25):
             log([fetch("options", s, "NSE_FNO", "OPTIDX", 1, listing_start("options", s)) for s in todo[i:i + 25]])
-            print(f"{stage} {min(i + 25, len(todo))}/{len(todo)} throttled={d.throttled}", flush=True)
+            print(f"{stage} {min(i + 25, len(todo))}/{len(todo)} throttled={d.throttled} gap={d.gap:.1f}s", flush=True)
 
 
 if __name__ == "__main__":

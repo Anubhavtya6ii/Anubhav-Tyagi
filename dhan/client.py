@@ -12,11 +12,12 @@ class Dhan:
     def __init__(self, per_second=4.0):
         self.h = {"access-token": os.environ["DHAN_ACCESS_TOKEN"], "client-id": os.environ["DHAN_CLIENT_ID"],
                   "Content-Type": "application/json", "Accept": "application/json"}
-        self.gap = 1.0 / per_second
+        self.gap = self.min_gap = 1.0 / per_second
         self.lock = threading.Lock()
         self.last = 0.0
         self.s = requests.Session()
         self.throttled = 0
+        self.ok_streak = 0
 
     def _wait(self, gap):
         with self.lock:
@@ -38,14 +39,21 @@ class Dhan:
                 time.sleep(2 ** min(attempt, 5))
                 continue
             if r.status_code == 429:
+                # adaptive pacing: back off hard and slow down; speed up again slowly after a clean run
                 self.throttled += 1
+                self.ok_streak = 0
+                self.gap = min(self.gap * 1.5, 15.0)
                 last = (429, r.text[:200])
-                time.sleep(min(20 * (attempt + 1), 60))
+                time.sleep(120)
                 continue
             if r.status_code >= 500:
                 last = (r.status_code, r.text[:200])
                 time.sleep(2 ** min(attempt, 5))
                 continue
+            self.ok_streak += 1
+            if self.ok_streak >= 100:
+                self.ok_streak = 0
+                self.gap = max(self.gap * 0.9, self.min_gap)
             try:
                 return r.status_code, r.json()
             except ValueError:
