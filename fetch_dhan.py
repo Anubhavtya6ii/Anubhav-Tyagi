@@ -80,22 +80,25 @@ def headers():
 
 def post(path, body, retries=6):
     """POST with rate limiting and retries. Returns the parsed JSON, or {"errorCode": ...} for a non-retryable error."""
+    last = ""
     for attempt in range(retries):
         LIMITER.wait()
         try:
             r = SESSION.post(f"{BASE}{path}", headers=headers(), json=body, timeout=60)
             j = r.json()
-        except (requests.RequestException, ValueError):
+        except (requests.RequestException, ValueError) as e:
+            last = type(e).__name__
             time.sleep(min(2 ** attempt, 30))
             continue
         code = j.get("errorCode") if isinstance(j, dict) else None
         if code in ("DH-901", "DH-902", "DH-903"):  # bad/expired token, no Data plan, no permission: retrying is pointless
             sys.exit(f"Dhan refused the request: {code} {j.get('errorMessage')}")
         if r.status_code == 429 or code == "DH-904" or r.status_code >= 500:  # rate limit / server trouble
+            last = f"HTTP {r.status_code} {code or ''}".strip()
             time.sleep(min(2 ** attempt, 30))
             continue
         return j
-    return {"errorCode": "RETRIES_EXHAUSTED", "errorMessage": f"{path} failed {retries} times"}
+    return {"errorCode": "RETRIES_EXHAUSTED", "errorMessage": f"{path} failed {retries} times, last cause: {last}"}
 
 
 def to_ist(epoch):
@@ -193,7 +196,10 @@ def fetch_window(d0):
     # ATM call first: if it is empty the window is a holiday/weekend/pre-history and the other series would be empty too
     first = fetch_series(0, "CALL", d0, d1)
     if isinstance(first, str):
-        open(path + ".bad", "w").write(first)
+        if first.startswith("RETRIES_EXHAUSTED"):  # transient: leave the window uncached so the next run retries it
+            print(f"  {d0} ATM CALL: {first}", flush=True)
+            return "retry"
+        open(path + ".bad", "w").write(first)  # a real API rejection: do not ask again
         return "bad"
     if first.empty:
         open(path + ".empty", "w").close()
@@ -206,7 +212,7 @@ def fetch_window(d0):
             r = fetch_series(off, opt, d0, d1)
             if isinstance(r, str):  # keep the window uncached so the next run retries it
                 print(f"  {d0} {opt} {strike_name(off)}: {r}", flush=True)
-                return "bad"
+                return "retry"
             parts.append(r)
     pd.concat(parts).to_csv(path + ".tmp", index=False)
     os.replace(path + ".tmp", path)  # atomic: a half-written window is never mistaken for a finished one
@@ -234,9 +240,11 @@ def fetch_options():
     for year, g in d.groupby(d.datetime.dt.year):
         g.to_csv(f"{OUT_DIR}/{year}.csv.gz", index=False)
         print(year, len(g), "rows")
-    bad = status.count("bad")
+    retry, bad = status.count("retry"), status.count("bad")
+    if retry:
+        print(f"\n{retry} windows hit temporary errors and are NOT in the output yet: run the script again to fetch them.")
     if bad:
-        print(f"\n{bad} windows failed (see *.bad files in {CACHE}); run again to retry the ones without a .bad marker.")
+        print(f"{bad} windows were rejected by the API (reason in the *.bad files in {CACHE}); they are skipped on later runs.")
 
 
 if __name__ == "__main__":
