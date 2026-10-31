@@ -3,3 +3,4 @@ __pycache__/
 data/nse_opt_days/
 data/deribit_days/
 data/nifty_chain_days/
+data/dhan_expired_*_days/
