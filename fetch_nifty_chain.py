@@ -21,6 +21,12 @@ COLS = ["date", "instrument", "expiry", "strike", "type", "open", "high", "low",
         "contracts", "oi", "chg_oi", "underlying"]
 
 
+def to_date(s):
+    """Old bhavcopies use 14-MAY-2012, but a few use a two-digit year (14-May-12)."""
+    s = s.astype(str).str.strip()
+    return pd.to_datetime(s, format="%d-%b-%Y", errors="coerce").fillna(pd.to_datetime(s, format="%d-%b-%y", errors="coerce"))
+
+
 def parse(raw):
     z = zipfile.ZipFile(io.BytesIO(raw))
     d = pd.read_csv(z.open(z.namelist()[0]), on_bad_lines="skip")  # a few NSE files have broken lines
@@ -36,8 +42,8 @@ def parse(raw):
         })[COLS]
     d = d[(d.SYMBOL == "NIFTY") & d.INSTRUMENT.isin(["OPTIDX", "FUTIDX"])]
     return pd.DataFrame({
-        "date": pd.to_datetime(d.TIMESTAMP, format="%d-%b-%Y"), "instrument": d.INSTRUMENT.map({"OPTIDX": "OPT", "FUTIDX": "FUT"}),
-        "expiry": pd.to_datetime(d.EXPIRY_DT, format="%d-%b-%Y"), "strike": d.STRIKE_PR,
+        "date": to_date(d.TIMESTAMP), "instrument": d.INSTRUMENT.map({"OPTIDX": "OPT", "FUTIDX": "FUT"}),
+        "expiry": to_date(d.EXPIRY_DT), "strike": d.STRIKE_PR,
         "type": d.OPTION_TYP.where(d.INSTRUMENT == "OPTIDX", "FUT"),
         "open": d.OPEN, "high": d.HIGH, "low": d.LOW, "close": d.CLOSE, "settle": d.SETTLE_PR,
         "contracts": d.CONTRACTS, "oi": d.OPEN_INT, "chg_oi": d.CHG_IN_OI, "underlying": pd.NA,
