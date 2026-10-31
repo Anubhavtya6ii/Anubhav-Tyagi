@@ -23,3 +23,11 @@ options daily 600/3991 throttled=0 gap=2.4s
 options daily 650/3991 throttled=0 gap=2.2s
 options daily 700/3991 throttled=0 gap=2.2s
 options daily 750/3991 throttled=0 gap=2.0s
+options daily 800/3991 throttled=0 gap=2.0s
+options daily 850/3991 throttled=0 gap=1.8s
+options daily 900/3991 throttled=0 gap=1.8s
+options daily 950/3991 throttled=0 gap=1.6s
+options daily 1000/3991 throttled=0 gap=1.6s
+options daily 1050/3991 throttled=0 gap=1.4s
+options daily 1100/3991 throttled=0 gap=1.4s
+options daily 1150/3991 throttled=0 gap=1.3s
