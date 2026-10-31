@@ -1,3 +1,7 @@
 options_1min_rest 25/451 throttled=0 gap=3.0s
 options_1min_rest 50/451 throttled=0 gap=3.0s
 options_1min_rest 75/451 throttled=0 gap=3.0s
+options_1min_rest 100/451 throttled=0 gap=2.7s
+options_1min_rest 125/451 throttled=0 gap=2.2s
+options_1min_rest 150/451 throttled=0 gap=2.0s
+options_1min_rest 175/451 throttled=0 gap=1.8s
