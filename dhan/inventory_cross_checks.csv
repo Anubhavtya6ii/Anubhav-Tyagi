@@ -1,0 +1,4 @@
+check,days compared,median abs diff %,days off by >0.1%,note
+Index daily close: Dhan vs Yahoo,4688.0,1.9718078669850314e-06,0.0,
+Index 5-min from API vs built from 1-min,,,,5-min file not downloaded yet
+Index daily close vs last 1-min close,2370.0,0.039891834944716376,396.0,"official close is an average of the last 30 min, not the last trade"

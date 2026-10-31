@@ -56,19 +56,26 @@ def cross_checks():
     out.append({"check": "Index daily close: Dhan vs Yahoo", "days compared": len(j), "median abs diff %": diff.median() * 100,
                 "days off by >0.1%": int((diff > 0.001).sum())})
     m1 = pd.read_csv("data/index/13_1.csv.gz", parse_dates=["time_ist"]).set_index("time_ist")
+    if not os.path.exists("data/index/13_5.csv.gz"):
+        out.append({"check": "Index 5-min from API vs built from 1-min", "note": "5-min file not downloaded yet"})
+        return pd.DataFrame(out + [daily_vs_1min(dd, m1)])
     m5 = pd.read_csv("data/index/13_5.csv.gz", parse_dates=["time_ist"]).set_index("time_ist")
     agg = m1.resample("5min", origin="start_day", offset="15min").agg({"open": "first", "high": "max", "low": "min", "close": "last"}).dropna()
     k = agg.join(m5[["open", "high", "low", "close"]], rsuffix="_api", how="inner")
     mism = (k[["open", "high", "low", "close"]].to_numpy() != k[["open_api", "high_api", "low_api", "close_api"]].to_numpy()).any(axis=1)
     out.append({"check": "Index 5-min from API vs built from 1-min", "days compared": k.index.normalize().nunique(),
                 "median abs diff %": float(np.nan), "days off by >0.1%": int(mism.sum()), "note": f"{mism.mean():.2%} of {len(k)} candles differ"})
+    out.append(daily_vs_1min(dd, m1))
+    return pd.DataFrame(out)
+
+
+def daily_vs_1min(dd, m1):
     last_daily = dd.groupby("date").close.last()
     last_1m = m1.groupby(m1.index.normalize()).close.last()
     z = pd.concat([last_daily.rename("daily"), last_1m.rename("1min")], axis=1, join="inner")
     zd = (z["1min"] / z.daily - 1).abs()
-    out.append({"check": "Index daily close vs last 1-min close", "days compared": len(z), "median abs diff %": zd.median() * 100,
-                "days off by >0.1%": int((zd > 0.001).sum())})
-    return pd.DataFrame(out)
+    return {"check": "Index daily close vs last 1-min close", "days compared": len(z), "median abs diff %": zd.median() * 100,
+            "days off by >0.1%": int((zd > 0.001).sum()), "note": "official close is an average of the last 30 min, not the last trade"}
 
 
 def main():
