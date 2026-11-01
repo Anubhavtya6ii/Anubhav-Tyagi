@@ -26,7 +26,8 @@ Interval codes: `D` daily, `1` `5` `15` `25` `60` minutes. Join `security_id` to
 | Futures, continuous near / next / far month | D | 3 Oct 2011 - 30 Oct 2026 (~3,600 days each) | OHLC, volume, OI |
 | Futures, the 3 listed contracts | 1, 5, 15, 25, 60 min | from each contract's listing (Aug-Oct 2026) | OHLC, volume, OI |
 | Options, all 3,991 listed contracts (18 expiries, strikes 1,500-48,000) | D | from listing, earliest Sep 2023 | OHLC, volume, OI |
-| Options, the 1,465 contracts that ever traded | 1 min (+5, 15, 25, 60 min) | from listing; 10.87 M one-minute candles | OHLC, volume, OI |
+| Options, the 1,465 contracts that ever traded | 1 min | from listing (earliest Sep 2023); 10,873,636 candles in 1,267 non-empty files | OHLC, volume, OI |
+| Options, the 1,267 contracts with 1-min candles | 5, 15, 25, 60 min | from listing; 2,182,686 / 740,585 / 455,674 / 209,226 candles | OHLC, volume, OI |
 | Option chain snapshot (30 Oct close) | - | all 18 expiries, 4,010 rows | LTP, IV, delta, gamma, theta, vega, OI, previous OI / close / volume, top bid/ask price & qty |
 | Quote snapshot (30 Oct close) | - | 3,987 of 3,995 instruments | LTP, OHLC, volume, OI, OI day high/low, circuit limits, 5-level depth (price, qty, orders) |
 
@@ -38,7 +39,8 @@ Interval codes: `D` daily, `1` `5` `15` `25` `60` minutes. Join `security_id` to
 - Daily close differs from the last 1-min close by a median 0.04%: NSE's official close is a 30-minute average, not the last trade.
 - Continuous futures daily series skip 80-217 trading days over 2011-2026.
 - 2,526 of 3,991 option contracts never traded (Dhan returns DH-907 "no data"); their daily files are empty.
-- No duplicate timestamps and no bad OHLC rows in any option file.
+- No duplicate timestamps and no bad OHLC rows in any option file, at any timeframe.
+- 10,310 datasets from 17,024 API calls; every dataset finished with no failed call (one 5-min file was re-fetched).
 
 ## API limitations found
 
