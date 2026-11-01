@@ -35,3 +35,14 @@ options_other_intervals 850/1267 throttled=0 gap=1.0s
 options_other_intervals 875/1267 throttled=0 gap=1.0s
 options_other_intervals 900/1267 throttled=0 gap=1.0s
 options_other_intervals 925/1267 throttled=0 gap=1.0s
+options_other_intervals 950/1267 throttled=0 gap=1.0s
+options_other_intervals 975/1267 throttled=0 gap=1.0s
+options_other_intervals 1000/1267 throttled=0 gap=1.0s
+options_other_intervals 1025/1267 throttled=0 gap=1.0s
+options_other_intervals 1050/1267 throttled=0 gap=1.0s
+options_other_intervals 1075/1267 throttled=0 gap=1.0s
+options_other_intervals 1100/1267 throttled=0 gap=1.0s
+options_other_intervals 1125/1267 throttled=0 gap=1.0s
+options_other_intervals 1150/1267 throttled=0 gap=1.0s
+options_other_intervals 1175/1267 throttled=0 gap=1.0s
+options_other_intervals 1200/1267 throttled=0 gap=1.0s
