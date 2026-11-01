@@ -95,6 +95,8 @@ def listing_start(kind, sid):
 
 
 def main(stage):
+    if stage == "options_other_intervals":
+        return other_intervals()
     os.makedirs("raw/history", exist_ok=True)
     inst = pd.read_csv("raw/nifty_instruments.csv")
     fut = inst[inst.INSTRUMENT == "FUTIDX"].SECURITY_ID.tolist()
@@ -118,6 +120,17 @@ def main(stage):
         for i in range(0, len(todo), 25):
             log([fetch("options", s, "NSE_FNO", "OPTIDX", 1, listing_start("options", s)) for s in todo[i:i + 25]])
             print(f"{stage} {min(i + 25, len(todo))}/{len(todo)} throttled={d.throttled} gap={d.gap:.1f}s", flush=True)
+
+
+def other_intervals():
+    """5/15/25/60-min for every option that has 1-min candles (the API serves each timeframe separately)."""
+    done = []
+    for p in sorted(os.listdir("data/options")):
+        if p.endswith("_1.csv.gz") and os.path.getsize(f"data/options/{p}") > 100:
+            done.append(int(p.split("_")[0]))
+    for i in range(0, len(done), 25):
+        log([fetch("options", s, "NSE_FNO", "OPTIDX", iv, listing_start("options", s)) for s in done[i:i + 25] for iv in (5, 15, 25, 60)])
+        print(f"options_other_intervals {min(i + 25, len(done))}/{len(done)} throttled={d.throttled} gap={d.gap:.1f}s", flush=True)
 
 
 if __name__ == "__main__":

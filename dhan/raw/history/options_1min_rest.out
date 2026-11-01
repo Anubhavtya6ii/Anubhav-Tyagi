@@ -5,3 +5,15 @@ options_1min_rest 100/451 throttled=0 gap=2.7s
 options_1min_rest 125/451 throttled=0 gap=2.2s
 options_1min_rest 150/451 throttled=0 gap=2.0s
 options_1min_rest 175/451 throttled=0 gap=1.8s
+options_1min_rest 200/451 throttled=0 gap=1.6s
+options_1min_rest 225/451 throttled=0 gap=1.3s
+options_1min_rest 250/451 throttled=0 gap=1.2s
+options_1min_rest 275/451 throttled=0 gap=1.0s
+options_1min_rest 300/451 throttled=0 gap=1.0s
+options_1min_rest 325/451 throttled=0 gap=1.0s
+options_1min_rest 350/451 throttled=0 gap=1.0s
+options_1min_rest 375/451 throttled=0 gap=1.0s
+options_1min_rest 400/451 throttled=0 gap=1.0s
+options_1min_rest 425/451 throttled=0 gap=1.0s
+options_1min_rest 450/451 throttled=0 gap=1.0s
+options_1min_rest 451/451 throttled=0 gap=1.0s
