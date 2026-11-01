@@ -17,3 +17,10 @@ options_other_intervals 400/1267 throttled=0 gap=1.0s
 options_other_intervals 425/1267 throttled=0 gap=1.0s
 options_other_intervals 450/1267 throttled=0 gap=1.0s
 options_other_intervals 475/1267 throttled=0 gap=1.0s
+options_other_intervals 500/1267 throttled=0 gap=1.0s
+options_other_intervals 525/1267 throttled=0 gap=1.0s
+options_other_intervals 550/1267 throttled=0 gap=1.0s
+options_other_intervals 575/1267 throttled=0 gap=1.0s
+options_other_intervals 600/1267 throttled=0 gap=1.0s
+options_other_intervals 625/1267 throttled=0 gap=1.0s
+options_other_intervals 650/1267 throttled=0 gap=1.0s
