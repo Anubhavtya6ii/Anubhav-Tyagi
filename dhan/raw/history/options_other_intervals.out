@@ -3,3 +3,17 @@ options_other_intervals 50/1267 throttled=0 gap=1.8s
 options_other_intervals 75/1267 throttled=0 gap=1.6s
 options_other_intervals 100/1267 throttled=0 gap=1.4s
 options_other_intervals 125/1267 throttled=0 gap=1.3s
+options_other_intervals 150/1267 throttled=0 gap=1.2s
+options_other_intervals 175/1267 throttled=0 gap=1.0s
+options_other_intervals 200/1267 throttled=0 gap=1.0s
+options_other_intervals 225/1267 throttled=0 gap=1.0s
+options_other_intervals 250/1267 throttled=0 gap=1.0s
+options_other_intervals 275/1267 throttled=0 gap=1.0s
+options_other_intervals 300/1267 throttled=0 gap=1.0s
+options_other_intervals 325/1267 throttled=0 gap=1.0s
+options_other_intervals 350/1267 throttled=0 gap=1.0s
+options_other_intervals 375/1267 throttled=0 gap=1.0s
+options_other_intervals 400/1267 throttled=0 gap=1.0s
+options_other_intervals 425/1267 throttled=0 gap=1.0s
+options_other_intervals 450/1267 throttled=0 gap=1.0s
+options_other_intervals 475/1267 throttled=0 gap=1.0s
