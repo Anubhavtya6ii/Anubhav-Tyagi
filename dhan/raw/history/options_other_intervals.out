@@ -1,0 +1,5 @@
+options_other_intervals 25/1267 throttled=0 gap=2.0s
+options_other_intervals 50/1267 throttled=0 gap=1.8s
+options_other_intervals 75/1267 throttled=0 gap=1.6s
+options_other_intervals 100/1267 throttled=0 gap=1.4s
+options_other_intervals 125/1267 throttled=0 gap=1.3s
