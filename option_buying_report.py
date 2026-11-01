@@ -93,15 +93,24 @@ def build():
         f"random entries: {pct(base['Avg return %'].mean())}.",
         "No edge beyond luck" if p_real <= null_rate * n_real * 1.5 + 2 else "Some set-ups pass: check the stress sheet")
     bs = t["by_signal"]
+    dv = pd.read_pickle("data/direction_value.pkl")
+    fprev = pd.read_pickle("data/direction_extra.pkl")
+    top_dv = dv.sort_values("Shuffle z (all)", ascending=False).head(2)
+    add("Does any signal pick the better side (CE vs PE) at all? (same bar, same strike, same exit, direction flipped / shuffled)",
+        f"Of {len(dv)} signals the best shuffle z-scores are {top_dv.iloc[0].Signal} ({top_dv.iloc[0]['Shuffle z (all)']:+.2f}; discovery {top_dv.iloc[0]['Shuffle z (IS)']:+.2f}, validation {top_dv.iloc[0]['Shuffle z (OOS)']:+.2f}) and "
+        f"{top_dv.iloc[1].Signal} ({top_dv.iloc[1]['Shuffle z (all)']:+.2f}; {top_dv.iloc[1]['Shuffle z (IS)']:+.2f} / {top_dv.iloc[1]['Shuffle z (OOS)']:+.2f}). Both are just 'follow yesterday's direction' at 09:35: plain "
+        f"follow-yesterday gives z {fprev.iloc[0]['Shuffle z']:+.2f} with no OI at all, but only in 2022-23 ({fprev.iloc[5]['Shuffle z']:+.2f}); 2019-21 {fprev.iloc[4]['Shuffle z']:+.2f}, 2024-26 {fprev.iloc[6]['Shuffle z']:+.2f}. "
+        f"A best-of-{len(dv)} z of about 2 is what chance alone produces. RSI reversal is significantly WRONG-way (z {dv.set_index('Signal').loc['RSI reversal (30/70)', 'Shuffle z (all)']:+.2f}).",
+        "No signal reliably picks the better side. Following yesterday is the only candidate and it is a one-regime effect")
     add("Which signal family is best / worst?",
         f"Best mean return: {bs.index[0]} ({pct(bs.iloc[0, 0])}); worst: {bs.index[-1]} ({pct(bs.iloc[-1, 0])}). "
         f"Spread between best and worst is {(bs.iloc[0, 0] - bs.iloc[-1, 0]) * 100:.1f} percentage points, versus random {pct(base['Avg return %'].mean())}.",
         "See Signal_Ranking")
-    best_s = sx.mean(1).idxmax()
-    worst_s = sx.mean(1).idxmin()
+    best_s = sx.mean(axis=1).idxmax()
+    worst_s = sx.mean(axis=1).idxmin()
     add("ITM vs ATM vs OTM, and 0.30 / 0.40 / 0.50 / 0.60 delta",
-        f"Mean return across all signals and exits: " + ", ".join(f"{k} {pct(v)}" for k, v in sx.mean(1).items()) +
-        f". Same table for random entries: " + ", ".join(f"{k} {pct(v)}" for k, v in rx.mean(1).items()) + f". Best: {best_s}; worst: {worst_s}.",
+        f"Mean return across all signals and exits: " + ", ".join(f"{k} {pct(v)}" for k, v in sx.mean(axis=1).items()) +
+        f". Same table for random entries: " + ", ".join(f"{k} {pct(v)}" for k, v in rx.mean(axis=1).items()) + f". Best: {best_s}; worst: {worst_s}.",
         "Deeper in-the-money loses least (smaller spread and theta as % of premium); far OTM loses most")
     ex = t["exit"]["Mean return %"]
     add("Fixed vs percentage stop-loss; fixed target vs trailing; time exits",
@@ -110,8 +119,8 @@ def build():
         "Exit style changes the loss, but no exit turns a no-edge signal profitable")
     dt = t["day_type"]
     add("Expiry day vs other days",
-        "Mean return by day type (all strikes): " + "; ".join(f"{k}: {pct(v)}" for k, v in dt.mean(1).items()) +
-        ". Random entries: " + "; ".join(f"{k}: {pct(v)}" for k, v in t["day_type_rand"].mean(1).items()) + ".",
+        "Mean return by day type (all strikes): " + "; ".join(f"{k}: {pct(v)}" for k, v in dt.mean(axis=1).items()) +
+        ". Random entries: " + "; ".join(f"{k}: {pct(v)}" for k, v in t["day_type_rand"].mean(axis=1).items()) + ".",
         "Expiry-day buying is the most expensive: premium is small, spread and theta take a larger share")
     tf = t["tf_summary"].iloc[0]
     add("1-minute vs 5-minute entries",
@@ -135,6 +144,8 @@ def build():
                         "Mean return % (next weekly, on expiry day)", "Mean return % (expiring contract, 0DTE)", "Random-entry return %", "Base avg %",
                         "Stress avg %", "Base OOS avg %", "Stress OOS avg %"})
     bx.RS_COLS.update({"Avg Rs (1 lot)", "Total Rs (1 lot)", "Max drawdown Rs", "Mean avg Rs/trade"})
+    bx.PCT_COLS.update({"Signal-direction return %", "Opposite-direction return %", "Long share", "Shuffle z"})
+    bx.NUM_COLS.update({"Value of direction (pp)", "Shuffle z", "Shuffle z (all)", "Shuffle z (IS)", "Shuffle z (OOS)", "t-score", "IS value (pp)", "OOS value (pp)"})
     bx.NUM_COLS.update({"Profit factor", "IS t", "OOS t", "Avg premium", "Avg hold (bars)", "Mean avg premium", "Mean hold (bars)", "Mean profit factor",
                         "Stress OOS t", "Mean trades (1-min)", "Mean trades (5-min)"})
     wb = Workbook()
@@ -168,6 +179,8 @@ def build():
         bx.finish(w, freeze="B4", widths={"A": 44})
         return w
 
+    sheet("Direction_Value", "Value of each signal's DIRECTION: paired against the opposite side at the same bar/strike/exit; shuffle z removes long/short bias", dv.set_index("Signal"))
+    sheet("Follow_Previous_Day", "Is the OI signal just 'follow yesterday'? Plain follow / fade of the previous day's direction (entry ~09:35)", fprev, index=False)
     sheet("Signal_Ranking", "Mean return per trade across the 81 strike x exit set-ups of each signal (5-min, nearest weekly, all days)", t["by_signal"])
     sheet("Strike_x_Exit", "Mean return per trade by strike and exit, averaged over all signals", sx, fmt="0.00%", color=(-0.06, 0.06))
     sheet("Random_Baseline", "Same table for RANDOM entries (no signal): the pure cost of buying options", rx, fmt="0.00%", color=(-0.06, 0.06))
