@@ -5,3 +5,4 @@ data/deribit_days/
 data/nifty_chain_days/
 dhan/raw/scrip_master_detailed.csv
 __pycache__/
+data/*.pkl
